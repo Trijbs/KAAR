@@ -19,6 +19,7 @@ import type { ChaosConfig, ChaosStrategy, GameMode, GameResult, Player, Scoreboa
 import { loadHistory, saveHistory } from "@/lib/storage";
 import { awardPoints, buildInitialScoreboard, findSeriesLeader } from "@/lib/rounds";
 import { pickDare } from "@/lib/dares";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useTheme } from "@/theme/ThemeProvider";
 import { ChaosBanner } from "./ChaosBanner";
 import { ModeSelector } from "./ModeSelector";
@@ -36,6 +37,7 @@ const CHAOS_LABELS: Record<ChaosStrategy, string> = {
 
 export function HomeScreen() {
   const { theme, themeName } = useTheme();
+  const reducedMotion = useReducedMotion();
   const settings = usePrototypeSettings();
   const arena = useTouchArena();
   const [settingsVisible, setSettingsVisible] = useState(false);
@@ -49,6 +51,7 @@ export function HomeScreen() {
   const [dare, setDare] = useState<string | null>(null);
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
   const [isRevealing, setIsRevealing] = useState(false);
+  const [countdown, setCountdown] = useState<number | null>(null);
   const reveal = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -96,7 +99,28 @@ export function HomeScreen() {
   };
 
   const handleLockPlayers = async () => {
+    if (arena.touches.length < 2) {
+      Alert.alert("Need more fingers", "Get at least two people touching the arena first.");
+      return;
+    }
+
+    if (!reducedMotion) {
+      setCountdown(3);
+      if (settings.vibrationEnabled) {
+        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
+      for (const nextCount of [2, 1]) {
+        await new Promise((resolve) => setTimeout(resolve, 260));
+        setCountdown(nextCount);
+        if (settings.vibrationEnabled) {
+          await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        }
+      }
+      await new Promise((resolve) => setTimeout(resolve, 220));
+    }
+
     const players = arena.lockPlayers();
+    setCountdown(null);
     if (players.length < 2) {
       Alert.alert("Need more fingers", "Get at least two people touching the arena first.");
       return;
@@ -141,6 +165,7 @@ export function HomeScreen() {
     setResult(null);
     setDare(null);
     setIsRevealing(false);
+    setCountdown(null);
     arena.resetArena();
     setScoreboard([]);
   };
@@ -308,8 +333,26 @@ export function HomeScreen() {
             highlightedIds={highlightedIds}
             locked={arena.lockedPlayers.length > 0}
             isRevealing={isRevealing}
+            countdown={countdown}
             onTouchEvent={arena.updateTouchesFromEvent}
           />
+
+          {!arena.lockedPlayers.length ? (
+            <View style={[styles.infoCard, { backgroundColor: theme.colors.panel, borderColor: theme.colors.border }]}>
+              <View style={styles.infoRow}>
+                <View>
+                  <Text style={[styles.infoTitle, { color: theme.colors.text }]}>Instant onboarding</Text>
+                  <Text style={[styles.infoBody, { color: theme.colors.textMuted }]}>
+                    Put down 2 to 8 fingers, tap lock, then let the reveal do the talking.
+                  </Text>
+                </View>
+                <View style={[styles.playerCountBadge, { backgroundColor: theme.colors.panelAlt }]}>
+                  <Text style={[styles.playerCountValue, { color: theme.colors.accent }]}>{arena.touches.length}</Text>
+                  <Text style={[styles.playerCountLabel, { color: theme.colors.textMuted }]}>players live</Text>
+                </View>
+              </View>
+            </View>
+          ) : null}
 
           {arena.lockedPlayers.length > 0 ? (
             <View style={[styles.playerCard, { backgroundColor: theme.colors.panel, borderColor: theme.colors.border }]}>
@@ -359,6 +402,12 @@ export function HomeScreen() {
                   scale: reveal.interpolate({
                     inputRange: [0, 1],
                     outputRange: [0.9, 1],
+                  }),
+                },
+                {
+                  translateY: reveal.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [18, 0],
                   }),
                 },
               ],
@@ -577,6 +626,45 @@ const styles = StyleSheet.create({
   playerChipText: {
     fontSize: 13,
     fontWeight: "900",
+  },
+  infoCard: {
+    borderWidth: 2,
+    borderRadius: 24,
+    padding: 16,
+  },
+  infoRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 12,
+    alignItems: "center",
+  },
+  infoTitle: {
+    fontSize: 18,
+    fontWeight: "900",
+  },
+  infoBody: {
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: "700",
+    maxWidth: 220,
+  },
+  playerCountBadge: {
+    minWidth: 92,
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+  playerCountValue: {
+    fontSize: 28,
+    lineHeight: 30,
+    fontWeight: "900",
+  },
+  playerCountLabel: {
+    fontSize: 11,
+    fontWeight: "800",
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
   },
   seriesCard: {
     borderWidth: 2,

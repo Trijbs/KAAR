@@ -43,6 +43,9 @@ Implemented in this pass:
 - Locked finger positions preserved on reveal
 - Suspense-first reveal animation pass
 - Continue button for elimination rounds
+- Live player count and clearer onboarding card
+- Pre-lock countdown for party readability
+- Reduced-motion aware animation behavior
 - Offline-first behavior with no runtime network dependency
 
 Planned next:

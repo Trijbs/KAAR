@@ -1,5 +1,6 @@
 import { memo, useEffect, useMemo, useRef } from "react";
 import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 import type { ArenaTouch, Player } from "@/types/game";
 import { useTheme } from "@/theme/ThemeProvider";
 
@@ -9,16 +10,30 @@ interface TouchArenaProps {
   highlightedIds: string[];
   locked: boolean;
   isRevealing: boolean;
+  countdown: number | null;
   onTouchEvent: (event: any) => void;
 }
 
-function TouchArenaComponent({ touches, players, highlightedIds, locked, isRevealing, onTouchEvent }: TouchArenaProps) {
+function TouchArenaComponent({
+  touches,
+  players,
+  highlightedIds,
+  locked,
+  isRevealing,
+  countdown,
+  onTouchEvent,
+}: TouchArenaProps) {
   const { theme } = useTheme();
+  const reducedMotion = useReducedMotion();
   const pulse = useRef(new Animated.Value(0.9)).current;
   const suspense = useRef(new Animated.Value(0)).current;
   const shimmer = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
+    if (reducedMotion) {
+      pulse.setValue(1);
+      return;
+    }
     const animation = Animated.loop(
       Animated.sequence([
         Animated.timing(pulse, {
@@ -35,9 +50,13 @@ function TouchArenaComponent({ touches, players, highlightedIds, locked, isRevea
     );
     animation.start();
     return () => animation.stop();
-  }, [pulse]);
+  }, [pulse, reducedMotion]);
 
   useEffect(() => {
+    if (reducedMotion) {
+      suspense.setValue(isRevealing ? 0.15 : 0);
+      return;
+    }
     if (!isRevealing) {
       suspense.stopAnimation();
       suspense.setValue(0);
@@ -56,9 +75,13 @@ function TouchArenaComponent({ touches, players, highlightedIds, locked, isRevea
         useNativeDriver: true,
       }),
     ]).start();
-  }, [isRevealing, suspense]);
+  }, [isRevealing, reducedMotion, suspense]);
 
   useEffect(() => {
+    if (reducedMotion) {
+      shimmer.setValue(0.15);
+      return;
+    }
     const animation = Animated.loop(
       Animated.timing(shimmer, {
         toValue: 1,
@@ -68,7 +91,7 @@ function TouchArenaComponent({ touches, players, highlightedIds, locked, isRevea
     );
     animation.start();
     return () => animation.stop();
-  }, [shimmer]);
+  }, [reducedMotion, shimmer]);
 
   const liveMarkers = useMemo(() => {
     if (locked) {
@@ -107,6 +130,23 @@ function TouchArenaComponent({ touches, players, highlightedIds, locked, isRevea
         <Text style={[styles.helper, { color: theme.colors.textMuted }]}>
           {locked ? "Players locked. Reveal when ready." : "Everyone slam a finger on the screen."}
         </Text>
+        <View style={styles.statusRow}>
+          <View style={[styles.statusPill, { backgroundColor: theme.colors.panelAlt }]}>
+            <Text style={[styles.statusText, { color: theme.colors.text }]}>
+              {locked ? `${players.length} locked in` : `${touches.length} live touches`}
+            </Text>
+          </View>
+          {countdown !== null ? (
+            <View style={[styles.statusPill, { backgroundColor: theme.colors.accent }]}>
+              <Text style={[styles.statusText, { color: theme.colors.background }]}>Locking in {countdown}</Text>
+            </View>
+          ) : null}
+          {isRevealing ? (
+            <View style={[styles.statusPill, { backgroundColor: theme.colors.danger }]}>
+              <Text style={[styles.statusText, { color: theme.colors.background }]}>Reveal live</Text>
+            </View>
+          ) : null}
+        </View>
       </View>
 
       <View style={styles.playfield}>
@@ -143,6 +183,11 @@ function TouchArenaComponent({ touches, players, highlightedIds, locked, isRevea
             },
           ]}
         />
+        {countdown !== null ? (
+          <View pointerEvents="none" style={styles.countdownWrap}>
+            <Text style={[styles.countdownText, { color: theme.colors.text }]}>{countdown}</Text>
+          </View>
+        ) : null}
         {liveMarkers.map((marker) => {
           const highlighted = highlightedIds.includes(marker.id);
           return (
@@ -203,9 +248,37 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "700",
   },
+  statusRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    paddingTop: 8,
+  },
+  statusPill: {
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+  },
+  statusText: {
+    fontSize: 11,
+    fontWeight: "900",
+    textTransform: "uppercase",
+    letterSpacing: 0.7,
+  },
   playfield: {
     flex: 1,
     minHeight: 290,
+  },
+  countdownWrap: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  countdownText: {
+    fontSize: 108,
+    lineHeight: 110,
+    fontWeight: "900",
+    opacity: 0.16,
   },
   shimmer: {
     position: "absolute",
