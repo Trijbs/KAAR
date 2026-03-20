@@ -35,6 +35,11 @@ Implemented in this pass:
 - Dark mode toggle
 - Theme system with `prototype` and `collab` themes
 - Session history
+- Local persistence for settings, theme, and history
+- Editable nicknames after lock-in
+- Best-of round tracking with scoreboard
+- Original dare prompts for loser and elimination reveals
+- Native share result action
 - Offline-first behavior with no runtime network dependency
 
 Planned next:
@@ -127,6 +132,7 @@ KAAR/
 Covered now:
 
 - Pure logic tests for fair and influenced selection
+- Pure logic tests for round tracking and series winners
 - Manual checks for replay flow, theme switching, and lock/reveal loop
 
 Still required on device:

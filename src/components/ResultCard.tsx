@@ -1,13 +1,14 @@
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, Share, StyleSheet, Text, View } from "react-native";
 import type { GameResult, Player } from "@/types/game";
 import { useTheme } from "@/theme/ThemeProvider";
 
 interface ResultCardProps {
   result: GameResult | null;
   players: Player[];
+  dare?: string | null;
 }
 
-export function ResultCard({ result, players }: ResultCardProps) {
+export function ResultCard({ result, players, dare }: ResultCardProps) {
   const { theme } = useTheme();
   if (!result) {
     return null;
@@ -43,6 +44,24 @@ export function ResultCard({ result, players }: ResultCardProps) {
           ))}
         </View>
       ) : null}
+
+      {dare ? (
+        <View style={[styles.dareCard, { backgroundColor: theme.colors.panelAlt }]}>
+          <Text style={[styles.dareEyebrow, { color: theme.colors.accent }]}>Party dare</Text>
+          <Text style={[styles.dareText, { color: theme.colors.text }]}>{dare}</Text>
+        </View>
+      ) : null}
+
+      <Pressable
+        onPress={() =>
+          Share.share({
+            message: `${result.title}\n${result.subtitle}`,
+          })
+        }
+        style={[styles.shareButton, { borderColor: theme.colors.border }]}
+      >
+        <Text style={[styles.shareText, { color: theme.colors.text }]}>Share Result</Text>
+      </Pressable>
     </View>
   );
 }
@@ -80,6 +99,22 @@ const styles = StyleSheet.create({
   teamGrid: {
     gap: 10,
   },
+  dareCard: {
+    borderRadius: 20,
+    padding: 14,
+    gap: 6,
+  },
+  dareEyebrow: {
+    fontSize: 12,
+    fontWeight: "900",
+    textTransform: "uppercase",
+    letterSpacing: 1,
+  },
+  dareText: {
+    fontSize: 14,
+    fontWeight: "800",
+    lineHeight: 20,
+  },
   teamCard: {
     borderRadius: 20,
     padding: 14,
@@ -92,5 +127,15 @@ const styles = StyleSheet.create({
   teamPlayers: {
     fontSize: 13,
     fontWeight: "700",
+  },
+  shareButton: {
+    alignItems: "center",
+    borderWidth: 2,
+    borderRadius: 18,
+    paddingVertical: 12,
+  },
+  shareText: {
+    fontSize: 14,
+    fontWeight: "900",
   },
 });

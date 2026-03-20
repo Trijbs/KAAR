@@ -52,3 +52,14 @@ export interface SessionHistoryItem {
   title: string;
   subtitle: string;
 }
+
+export interface AppSettings {
+  soundEnabled: boolean;
+  vibrationEnabled: boolean;
+  bestOf: 1 | 3 | 5;
+}
+
+export interface ScoreboardEntry {
+  playerId: string;
+  points: number;
+}

@@ -7,8 +7,10 @@ interface SettingsModalProps {
   onClose: () => void;
   soundEnabled: boolean;
   vibrationEnabled: boolean;
+  bestOf: 1 | 3 | 5;
   onSoundChange: (enabled: boolean) => void;
   onVibrationChange: (enabled: boolean) => void;
+  onBestOfChange: (value: 1 | 3 | 5) => void;
   themeName: ThemeName;
 }
 
@@ -33,6 +35,34 @@ export function SettingsModal(props: SettingsModalProps) {
             textColor={theme.colors.text}
           />
           <SettingRow label="Dark Mode" value={isDark} onChange={toggleDarkMode} textColor={theme.colors.text} />
+
+          <View style={styles.bestOfSection}>
+            <Text style={[styles.rowLabel, { color: theme.colors.text }]}>Series length</Text>
+            <View style={styles.themeRow}>
+              {[1, 3, 5].map((value) => (
+                <Pressable
+                  key={value}
+                  onPress={() => props.onBestOfChange(value as 1 | 3 | 5)}
+                  style={[
+                    styles.themeChip,
+                    {
+                      backgroundColor: props.bestOf === value ? theme.colors.accent : theme.colors.panelAlt,
+                      borderColor: theme.colors.border,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={{
+                      color: props.bestOf === value ? theme.colors.background : theme.colors.text,
+                      fontWeight: "800",
+                    }}
+                  >
+                    Best of {value}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          </View>
 
           <View style={styles.themeRow}>
             {(["prototype", "collab"] as const).map((name) => (
@@ -111,6 +141,9 @@ const styles = StyleSheet.create({
   themeRow: {
     flexDirection: "row",
     gap: 12,
+  },
+  bestOfSection: {
+    gap: 10,
   },
   themeChip: {
     flex: 1,

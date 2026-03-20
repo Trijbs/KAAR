@@ -1,5 +1,6 @@
-import { createContext, useContext, useMemo, useState, type PropsWithChildren } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, type PropsWithChildren } from "react";
 import type { ThemeName } from "@/types/game";
+import { loadThemePreferences, saveThemePreferences } from "@/lib/storage";
 import {
   collabDarkTheme,
   collabLightTheme,
@@ -21,6 +22,24 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
 export function ThemeProvider({ children }: PropsWithChildren) {
   const [isDark, setIsDark] = useState(true);
   const [themeName, setThemeName] = useState<ThemeName>("prototype");
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    loadThemePreferences()
+      .then((preferences) => {
+        setIsDark(preferences.isDark);
+        setThemeName(preferences.themeName);
+        setHydrated(true);
+      })
+      .catch(() => setHydrated(true));
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated) {
+      return;
+    }
+    saveThemePreferences({ isDark, themeName }).catch(() => undefined);
+  }, [hydrated, isDark, themeName]);
 
   const theme = useMemo(() => {
     if (themeName === "collab") {

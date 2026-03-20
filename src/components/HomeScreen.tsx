@@ -11,14 +11,19 @@ import {
   Text,
   View,
 } from "react-native";
+import { NicknameModal } from "@/components/NicknameModal";
 import { usePrototypeSettings } from "@/features/settings/usePrototypeSettings";
 import { buildHistoryItem, resolveGame } from "@/features/game/selection";
 import { useTouchArena } from "@/features/arena/useTouchArena";
-import type { ChaosConfig, ChaosStrategy, GameMode, GameResult, SessionHistoryItem } from "@/types/game";
+import type { ChaosConfig, ChaosStrategy, GameMode, GameResult, Player, ScoreboardEntry, SessionHistoryItem } from "@/types/game";
+import { loadHistory, saveHistory } from "@/lib/storage";
+import { awardPoints, buildInitialScoreboard, findSeriesLeader } from "@/lib/rounds";
+import { pickDare } from "@/lib/dares";
 import { useTheme } from "@/theme/ThemeProvider";
 import { ChaosBanner } from "./ChaosBanner";
 import { ModeSelector } from "./ModeSelector";
 import { ResultCard } from "./ResultCard";
+import { ScoreboardCard } from "./ScoreboardCard";
 import { SettingsModal } from "./SettingsModal";
 import { TouchArena } from "./TouchArena";
 
@@ -40,13 +45,37 @@ export function HomeScreen() {
   const [chaosTargetPlayerId, setChaosTargetPlayerId] = useState<string | undefined>();
   const [result, setResult] = useState<GameResult | null>(null);
   const [history, setHistory] = useState<SessionHistoryItem[]>([]);
+  const [scoreboard, setScoreboard] = useState<ScoreboardEntry[]>([]);
+  const [dare, setDare] = useState<string | null>(null);
+  const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
   const reveal = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    loadHistory()
+      .then((items) => setHistory(items))
+      .catch(() => undefined);
+  }, []);
+
+  useEffect(() => {
+    saveHistory(history).catch(() => undefined);
+  }, [history]);
 
   useEffect(() => {
     if (!arena.lockedPlayers.find((player) => player.id === chaosTargetPlayerId)) {
       setChaosTargetPlayerId(arena.lockedPlayers[0]?.id);
     }
   }, [arena.lockedPlayers, chaosTargetPlayerId]);
+
+  useEffect(() => {
+    if (arena.lockedPlayers.length > 0) {
+      setScoreboard((current) => {
+        if (current.length === arena.lockedPlayers.length) {
+          return current;
+        }
+        return buildInitialScoreboard(arena.lockedPlayers);
+      });
+    }
+  }, [arena.lockedPlayers]);
 
   const chaosConfig: ChaosConfig = useMemo(
     () => ({
@@ -71,7 +100,9 @@ export function HomeScreen() {
       Alert.alert("Need more fingers", "Get at least two people touching the arena first.");
       return;
     }
+    setScoreboard(buildInitialScoreboard(players));
     setResult(null);
+    setDare(null);
     reveal.setValue(0);
     await triggerHaptic();
   };
@@ -81,6 +112,12 @@ export function HomeScreen() {
       const nextResult = resolveGame(mode, arena.lockedPlayers, chaosConfig);
       setResult(nextResult);
       setHistory((current) => [buildHistoryItem(nextResult), ...current].slice(0, 6));
+      setDare(
+        nextResult.mode === "loser" || nextResult.mode === "elimination"
+          ? pickDare(history.length)
+          : null,
+      );
+      setScoreboard((current) => awardPoints(current, nextResult.highlightedIds, nextResult.mode));
       await triggerHaptic();
       Animated.spring(reveal, {
         toValue: 1,
@@ -96,21 +133,40 @@ export function HomeScreen() {
   const handleReplay = () => {
     reveal.setValue(0);
     setResult(null);
+    setDare(null);
     arena.resetArena();
+    setScoreboard([]);
   };
 
   const highlightedIds = result?.highlightedIds ?? [];
+  const seriesLeader = findSeriesLeader(scoreboard, arena.lockedPlayers, settings.bestOf);
 
   return (
     <LinearGradient colors={theme.gradient} style={styles.flex}>
       <SafeAreaView style={styles.flex}>
+        <NicknameModal
+          visible={Boolean(editingPlayer)}
+          initialValue={editingPlayer?.label ?? ""}
+          onClose={() => setEditingPlayer(null)}
+          onSave={(value) => {
+            if (!editingPlayer) {
+              return;
+            }
+            arena.updateLockedPlayers((players) =>
+              players.map((player) => (player.id === editingPlayer.id ? { ...player, label: value } : player)),
+            );
+            setEditingPlayer(null);
+          }}
+        />
         <SettingsModal
           visible={settingsVisible}
           onClose={() => setSettingsVisible(false)}
           soundEnabled={settings.soundEnabled}
           vibrationEnabled={settings.vibrationEnabled}
+          bestOf={settings.bestOf}
           onSoundChange={settings.setSoundEnabled}
           onVibrationChange={settings.setVibrationEnabled}
+          onBestOfChange={settings.setBestOf}
           themeName={themeName}
         />
 
@@ -235,6 +291,23 @@ export function HomeScreen() {
             onTouchEvent={arena.updateTouchesFromEvent}
           />
 
+          {arena.lockedPlayers.length > 0 ? (
+            <View style={[styles.playerCard, { backgroundColor: theme.colors.panel, borderColor: theme.colors.border }]}>
+              <Text style={[styles.playerTitle, { color: theme.colors.text }]}>Nicknames</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chaosRow}>
+                {arena.lockedPlayers.map((player) => (
+                  <Pressable
+                    key={player.id}
+                    onPress={() => setEditingPlayer(player)}
+                    style={[styles.targetChip, { backgroundColor: player.color, borderColor: player.color }]}
+                  >
+                    <Text style={[styles.playerChipText, { color: theme.colors.background }]}>{player.label}</Text>
+                  </Pressable>
+                ))}
+              </ScrollView>
+            </View>
+          ) : null}
+
           <View style={styles.buttonRow}>
             <Pressable
               onPress={handleLockPlayers}
@@ -271,8 +344,19 @@ export function HomeScreen() {
               ],
             }}
           >
-            <ResultCard result={result} players={arena.lockedPlayers} />
+            <ResultCard result={result} players={arena.lockedPlayers} dare={dare} />
           </Animated.View>
+
+          {arena.lockedPlayers.length > 0 ? (
+            <ScoreboardCard scoreboard={scoreboard} players={arena.lockedPlayers} bestOf={settings.bestOf} />
+          ) : null}
+
+          {seriesLeader ? (
+            <View style={[styles.seriesCard, { backgroundColor: theme.colors.accent, borderColor: theme.colors.border }]}>
+              <Text style={[styles.seriesEyebrow, { color: theme.colors.background }]}>Series Winner</Text>
+              <Text style={[styles.seriesTitle, { color: theme.colors.background }]}>{seriesLeader.label}</Text>
+            </View>
+          ) : null}
 
           <Pressable onPress={handleReplay} style={[styles.replayButton, { borderColor: theme.colors.border }]}>
             <Text style={[styles.replayText, { color: theme.colors.text }]}>Replay Round</Text>
@@ -450,5 +534,36 @@ const styles = StyleSheet.create({
   historySubline: {
     fontSize: 13,
     fontWeight: "600",
+  },
+  playerCard: {
+    borderWidth: 2,
+    borderRadius: 24,
+    padding: 16,
+    gap: 10,
+  },
+  playerTitle: {
+    fontSize: 18,
+    fontWeight: "900",
+  },
+  playerChipText: {
+    fontSize: 13,
+    fontWeight: "900",
+  },
+  seriesCard: {
+    borderWidth: 2,
+    borderRadius: 24,
+    padding: 18,
+    gap: 6,
+    alignItems: "center",
+  },
+  seriesEyebrow: {
+    fontSize: 12,
+    fontWeight: "900",
+    textTransform: "uppercase",
+    letterSpacing: 1,
+  },
+  seriesTitle: {
+    fontSize: 28,
+    fontWeight: "900",
   },
 });

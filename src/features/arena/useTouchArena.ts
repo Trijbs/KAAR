@@ -47,6 +47,10 @@ export function useTouchArena() {
     return nextPlayers;
   };
 
+  const updateLockedPlayers = (updater: (players: Player[]) => Player[]) => {
+    setLockedPlayers((current) => updater(current));
+  };
+
   const playerColorMap = useMemo(
     () =>
       lockedPlayers.reduce<Record<string, string>>((accumulator, player) => {
@@ -62,6 +66,7 @@ export function useTouchArena() {
     playerColorMap,
     updateTouchesFromEvent,
     lockPlayers,
+    updateLockedPlayers,
     resetArena,
   };
 }
