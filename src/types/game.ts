@@ -13,6 +13,9 @@ export interface Player {
   id: string;
   label: string;
   color: string;
+  x?: number;
+  y?: number;
+  radius?: number;
 }
 
 export interface TeamAssignment {

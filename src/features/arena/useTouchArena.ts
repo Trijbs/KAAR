@@ -41,6 +41,9 @@ export function useTouchArena() {
       id: `player-${lockCounter.current}-${touch.id}`,
       label: createPlayerLabel(index),
       color: touch.color,
+      x: touch.x,
+      y: touch.y,
+      radius: touch.radius,
     }));
     lockCounter.current += 1;
     setLockedPlayers(nextPlayers);
@@ -49,6 +52,10 @@ export function useTouchArena() {
 
   const updateLockedPlayers = (updater: (players: Player[]) => Player[]) => {
     setLockedPlayers((current) => updater(current));
+  };
+
+  const replaceLockedPlayers = (players: Player[]) => {
+    setLockedPlayers(players);
   };
 
   const playerColorMap = useMemo(
@@ -67,6 +74,7 @@ export function useTouchArena() {
     updateTouchesFromEvent,
     lockPlayers,
     updateLockedPlayers,
+    replaceLockedPlayers,
     resetArena,
   };
 }

@@ -40,6 +40,9 @@ Implemented in this pass:
 - Best-of round tracking with scoreboard
 - Original dare prompts for loser and elimination reveals
 - Native share result action
+- Locked finger positions preserved on reveal
+- Suspense-first reveal animation pass
+- Continue button for elimination rounds
 - Offline-first behavior with no runtime network dependency
 
 Planned next:

@@ -48,6 +48,7 @@ export function HomeScreen() {
   const [scoreboard, setScoreboard] = useState<ScoreboardEntry[]>([]);
   const [dare, setDare] = useState<string | null>(null);
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
+  const [isRevealing, setIsRevealing] = useState(false);
   const reveal = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -109,6 +110,9 @@ export function HomeScreen() {
 
   const handleReveal = async () => {
     try {
+      setIsRevealing(true);
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      await new Promise((resolve) => setTimeout(resolve, 850));
       const nextResult = resolveGame(mode, arena.lockedPlayers, chaosConfig);
       setResult(nextResult);
       setHistory((current) => [buildHistoryItem(nextResult), ...current].slice(0, 6));
@@ -127,6 +131,8 @@ export function HomeScreen() {
       }).start();
     } catch (error) {
       Alert.alert("Reveal blocked", error instanceof Error ? error.message : "Unknown reveal error.");
+    } finally {
+      setIsRevealing(false);
     }
   };
 
@@ -134,8 +140,21 @@ export function HomeScreen() {
     reveal.setValue(0);
     setResult(null);
     setDare(null);
+    setIsRevealing(false);
     arena.resetArena();
     setScoreboard([]);
+  };
+
+  const handleNextEliminationRound = () => {
+    if (!result?.eliminatedId) {
+      return;
+    }
+    const survivors = arena.lockedPlayers.filter((player) => player.id !== result.eliminatedId);
+    reveal.setValue(0);
+    setResult(null);
+    setDare(null);
+    setIsRevealing(false);
+    arena.replaceLockedPlayers(survivors);
   };
 
   const highlightedIds = result?.highlightedIds ?? [];
@@ -288,6 +307,7 @@ export function HomeScreen() {
             players={arena.lockedPlayers}
             highlightedIds={highlightedIds}
             locked={arena.lockedPlayers.length > 0}
+            isRevealing={isRevealing}
             onTouchEvent={arena.updateTouchesFromEvent}
           />
 
@@ -356,6 +376,15 @@ export function HomeScreen() {
               <Text style={[styles.seriesEyebrow, { color: theme.colors.background }]}>Series Winner</Text>
               <Text style={[styles.seriesTitle, { color: theme.colors.background }]}>{seriesLeader.label}</Text>
             </View>
+          ) : null}
+
+          {mode === "elimination" && result?.eliminatedId && arena.lockedPlayers.length > 2 ? (
+            <Pressable
+              onPress={handleNextEliminationRound}
+              style={[styles.primaryButton, { backgroundColor: theme.colors.accentSecondary }]}
+            >
+              <Text style={[styles.primaryLabel, { color: theme.colors.background }]}>Next Elimination Round</Text>
+            </Pressable>
           ) : null}
 
           <Pressable onPress={handleReplay} style={[styles.replayButton, { borderColor: theme.colors.border }]}>

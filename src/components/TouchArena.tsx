@@ -8,12 +8,15 @@ interface TouchArenaProps {
   players: Player[];
   highlightedIds: string[];
   locked: boolean;
+  isRevealing: boolean;
   onTouchEvent: (event: any) => void;
 }
 
-function TouchArenaComponent({ touches, players, highlightedIds, locked, onTouchEvent }: TouchArenaProps) {
+function TouchArenaComponent({ touches, players, highlightedIds, locked, isRevealing, onTouchEvent }: TouchArenaProps) {
   const { theme } = useTheme();
   const pulse = useRef(new Animated.Value(0.9)).current;
+  const suspense = useRef(new Animated.Value(0)).current;
+  const shimmer = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     const animation = Animated.loop(
@@ -34,14 +37,48 @@ function TouchArenaComponent({ touches, players, highlightedIds, locked, onTouch
     return () => animation.stop();
   }, [pulse]);
 
+  useEffect(() => {
+    if (!isRevealing) {
+      suspense.stopAnimation();
+      suspense.setValue(0);
+      return;
+    }
+
+    Animated.sequence([
+      Animated.timing(suspense, {
+        toValue: 1,
+        duration: 720,
+        useNativeDriver: true,
+      }),
+      Animated.timing(suspense, {
+        toValue: 0.2,
+        duration: 180,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [isRevealing, suspense]);
+
+  useEffect(() => {
+    const animation = Animated.loop(
+      Animated.timing(shimmer, {
+        toValue: 1,
+        duration: 1800,
+        useNativeDriver: true,
+      }),
+    );
+    animation.start();
+    return () => animation.stop();
+  }, [shimmer]);
+
   const liveMarkers = useMemo(() => {
     if (locked) {
       return players.map((player, index) => ({
         id: player.id,
         label: player.label,
         color: player.color,
-        x: 56 + (index % 3) * 110,
-        y: 72 + Math.floor(index / 3) * 110,
+        x: Math.max(18, (player.x ?? 56 + (index % 3) * 110) - ((player.radius ?? 44) * 0.9)),
+        y: Math.max(18, (player.y ?? 72 + Math.floor(index / 3) * 110) - ((player.radius ?? 44) * 0.9)),
+        radius: player.radius ?? 44,
       }));
     }
 
@@ -51,6 +88,7 @@ function TouchArenaComponent({ touches, players, highlightedIds, locked, onTouch
       color: touch.color,
       x: Math.max(20, touch.x - touch.radius),
       y: Math.max(20, touch.y - touch.radius),
+      radius: touch.radius,
     }));
   }, [locked, players, touches]);
 
@@ -72,6 +110,39 @@ function TouchArenaComponent({ touches, players, highlightedIds, locked, onTouch
       </View>
 
       <View style={styles.playfield}>
+        <Animated.View
+          pointerEvents="none"
+          style={[
+            styles.shimmer,
+            {
+              backgroundColor: theme.colors.glow,
+              opacity: shimmer.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0.12, 0.02],
+              }),
+              transform: [
+                {
+                  translateX: shimmer.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [-180, 260],
+                  }),
+                },
+              ],
+            },
+          ]}
+        />
+        <Animated.View
+          pointerEvents="none"
+          style={[
+            styles.suspenseOverlay,
+            {
+              opacity: suspense.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0, 0.4],
+              }),
+            },
+          ]}
+        />
         {liveMarkers.map((marker) => {
           const highlighted = highlightedIds.includes(marker.id);
           return (
@@ -82,9 +153,21 @@ function TouchArenaComponent({ touches, players, highlightedIds, locked, onTouch
                 {
                   left: marker.x,
                   top: marker.y,
+                  width: marker.radius * 2,
+                  height: marker.radius * 2,
                   backgroundColor: marker.color,
                   borderColor: highlighted ? theme.colors.accentSecondary : theme.colors.panel,
-                  transform: [{ scale: highlighted ? pulse : 1 }],
+                  transform: [
+                    { scale: highlighted ? pulse : 1 },
+                    {
+                      scale: isRevealing
+                        ? suspense.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [1, 1.12],
+                          })
+                        : 1,
+                    },
+                  ],
                   shadowColor: marker.color,
                 },
               ]}
@@ -124,10 +207,20 @@ const styles = StyleSheet.create({
     flex: 1,
     minHeight: 290,
   },
+  shimmer: {
+    position: "absolute",
+    top: -40,
+    left: 0,
+    width: 160,
+    height: 420,
+    borderRadius: 999,
+  },
+  suspenseOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "#ffffff",
+  },
   marker: {
     position: "absolute",
-    width: 88,
-    height: 88,
     borderRadius: 999,
     justifyContent: "center",
     alignItems: "center",
