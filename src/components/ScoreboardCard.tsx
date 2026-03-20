@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from "react-native";
 import type { Player, ScoreboardEntry } from "@/types/game";
-import { getWinningThreshold } from "@/lib/rounds";
+import { getSeriesRoundsPlayed, getWinningThreshold } from "@/lib/rounds";
 import { useTheme } from "@/theme/ThemeProvider";
 
 interface ScoreboardCardProps {
@@ -11,6 +11,7 @@ interface ScoreboardCardProps {
 
 export function ScoreboardCard({ scoreboard, players, bestOf }: ScoreboardCardProps) {
   const { theme } = useTheme();
+  const roundsPlayed = getSeriesRoundsPlayed(scoreboard);
   const playerMap = players.reduce<Record<string, Player>>((accumulator, player) => {
     accumulator[player.id] = player;
     return accumulator;
@@ -21,6 +22,9 @@ export function ScoreboardCard({ scoreboard, players, bestOf }: ScoreboardCardPr
       <Text style={[styles.title, { color: theme.colors.text }]}>Best of {bestOf}</Text>
       <Text style={[styles.helper, { color: theme.colors.textMuted }]}>
         First to {getWinningThreshold(bestOf)} points wins the series.
+      </Text>
+      <Text style={[styles.micro, { color: theme.colors.accent }]}>
+        {roundsPlayed} round{roundsPlayed === 1 ? "" : "s"} played
       </Text>
       <View style={styles.list}>
         {scoreboard.map((entry) => (
@@ -54,6 +58,12 @@ const styles = StyleSheet.create({
   },
   list: {
     gap: 8,
+  },
+  micro: {
+    fontSize: 11,
+    fontWeight: "900",
+    textTransform: "uppercase",
+    letterSpacing: 0.7,
   },
   row: {
     flexDirection: "row",

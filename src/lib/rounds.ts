@@ -38,3 +38,21 @@ export function findSeriesLeader(
   }
   return players.find((player) => player.id === winner.playerId) ?? null;
 }
+
+export function getSeriesStandings(scoreboard: ScoreboardEntry[], players: Player[]) {
+  const playerMap = players.reduce<Record<string, Player>>((accumulator, player) => {
+    accumulator[player.id] = player;
+    return accumulator;
+  }, {});
+
+  return [...scoreboard]
+    .sort((left, right) => right.points - left.points)
+    .map((entry) => ({
+      ...entry,
+      player: playerMap[entry.playerId] ?? null,
+    }));
+}
+
+export function getSeriesRoundsPlayed(scoreboard: ScoreboardEntry[]) {
+  return scoreboard.reduce((total, entry) => total + entry.points, 0);
+}

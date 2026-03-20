@@ -26,6 +26,7 @@ import { ChaosBanner } from "./ChaosBanner";
 import { ModeSelector } from "./ModeSelector";
 import { ResultCard } from "./ResultCard";
 import { ScoreboardCard } from "./ScoreboardCard";
+import { SeriesSummaryCard } from "./SeriesSummaryCard";
 import { SettingsModal } from "./SettingsModal";
 import { TouchArena } from "./TouchArena";
 
@@ -172,6 +173,14 @@ export function HomeScreen() {
     setCountdown(null);
     arena.resetArena();
     setScoreboard([]);
+  };
+
+  const handleResetSeries = () => {
+    reveal.setValue(0);
+    setResult(null);
+    setDare(null);
+    setIsRevealing(false);
+    setScoreboard(buildInitialScoreboard(arena.lockedPlayers));
   };
 
   const handleNextEliminationRound = () => {
@@ -409,37 +418,40 @@ export function HomeScreen() {
             </Pressable>
           </View>
 
-          <Animated.View
-            style={{
-              opacity: reveal,
-              transform: [
-                {
-                  scale: reveal.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [0.9, 1],
-                  }),
-                },
-                {
-                  translateY: reveal.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [18, 0],
-                  }),
-                },
-              ],
-            }}
-          >
-            <ResultCard result={result} players={arena.lockedPlayers} dare={dare} />
-          </Animated.View>
+          {seriesLeader ? (
+            <SeriesSummaryCard
+              winner={seriesLeader}
+              scoreboard={scoreboard}
+              players={arena.lockedPlayers}
+              bestOf={settings.bestOf}
+              onReset={handleResetSeries}
+            />
+          ) : (
+            <Animated.View
+              style={{
+                opacity: reveal,
+                transform: [
+                  {
+                    scale: reveal.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0.9, 1],
+                    }),
+                  },
+                  {
+                    translateY: reveal.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [18, 0],
+                    }),
+                  },
+                ],
+              }}
+            >
+              <ResultCard result={result} players={arena.lockedPlayers} dare={dare} />
+            </Animated.View>
+          )}
 
           {arena.lockedPlayers.length > 0 ? (
             <ScoreboardCard scoreboard={scoreboard} players={arena.lockedPlayers} bestOf={settings.bestOf} />
-          ) : null}
-
-          {seriesLeader ? (
-            <View style={[styles.seriesCard, { backgroundColor: theme.colors.accent, borderColor: theme.colors.border }]}>
-              <Text style={[styles.seriesEyebrow, { color: theme.colors.background }]}>Series Winner</Text>
-              <Text style={[styles.seriesTitle, { color: theme.colors.background }]}>{seriesLeader.label}</Text>
-            </View>
           ) : null}
 
           {mode === "elimination" && result?.eliminatedId && arena.lockedPlayers.length > 2 ? (
@@ -697,22 +709,5 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     textTransform: "uppercase",
     letterSpacing: 0.8,
-  },
-  seriesCard: {
-    borderWidth: 2,
-    borderRadius: 24,
-    padding: 18,
-    gap: 6,
-    alignItems: "center",
-  },
-  seriesEyebrow: {
-    fontSize: 12,
-    fontWeight: "900",
-    textTransform: "uppercase",
-    letterSpacing: 1,
-  },
-  seriesTitle: {
-    fontSize: 28,
-    fontWeight: "900",
   },
 });

@@ -49,6 +49,7 @@ Implemented in this pass:
 - Theme asset slot layer for future licensed overlays and sound packs
 - EAS build scaffold and mobile package identifiers
 - Original local sound pack wired through Expo audio
+- Proper best-of series summary and reset flow
 - Offline-first behavior with no runtime network dependency
 
 Planned next:
