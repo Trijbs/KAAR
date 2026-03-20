@@ -1,4 +1,5 @@
 import { palette, radius, spacing, typography, motion } from "./tokens";
+import { collabAssets, prototypeAssets, type ThemeAssetSet } from "./assets";
 import type { ThemeName } from "@/types/game";
 
 export interface ThemeDefinition {
@@ -19,6 +20,7 @@ export interface ThemeDefinition {
     chaos: string;
   };
   gradient: [string, string, string];
+  assets: ThemeAssetSet;
   spacing: typeof spacing;
   radius: typeof radius;
   typography: typeof typography;
@@ -43,6 +45,7 @@ export const prototypeLightTheme: ThemeDefinition = {
     chaos: "#fff1a6",
   },
   gradient: ["#fff1db", "#ffd7f3", "#c7f5ff"],
+  assets: prototypeAssets,
   spacing,
   radius,
   typography,
@@ -79,6 +82,7 @@ export const collabLightTheme: ThemeDefinition = {
     glow: "rgba(188, 198, 255, 0.24)",
   },
   gradient: ["#f8f8f8", "#ece7ff", "#ffe8d7"],
+  assets: collabAssets,
 };
 
 export const collabDarkTheme: ThemeDefinition = {
@@ -91,4 +95,5 @@ export const collabDarkTheme: ThemeDefinition = {
     glow: "rgba(204, 210, 255, 0.2)",
   },
   gradient: ["#101018", "#1a1730", "#2c1f1a"],
+  assets: collabAssets,
 };

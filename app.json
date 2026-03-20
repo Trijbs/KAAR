@@ -3,15 +3,22 @@
     "name": "KAAR",
     "slug": "kaar",
     "version": "0.1.0",
+    "scheme": "kaar",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#11131d"
+    },
     "assetBundlePatterns": [
       "**/*"
     ],
     "ios": {
+      "bundleIdentifier": "com.trijbs.kaar",
       "supportsTablet": true
     },
     "android": {
+      "package": "com.trijbs.kaar",
       "adaptiveIcon": {
         "backgroundColor": "#11131d"
       }

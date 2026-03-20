@@ -46,6 +46,8 @@ Implemented in this pass:
 - Live player count and clearer onboarding card
 - Pre-lock countdown for party readability
 - Reduced-motion aware animation behavior
+- Theme asset slot layer for future licensed overlays and sound packs
+- EAS build scaffold and mobile package identifiers
 - Offline-first behavior with no runtime network dependency
 
 Planned next:

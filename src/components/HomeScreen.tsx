@@ -222,6 +222,14 @@ export function HomeScreen() {
               <Text style={[styles.subtitle, { color: theme.colors.textMuted }]}>
                 Loud party energy, zero hidden rigging, and a clearly labeled chaos switch for intentional influence.
               </Text>
+              <View style={styles.heroMetaRow}>
+                <View style={[styles.heroMetaPill, { backgroundColor: theme.colors.panelAlt }]}>
+                  <Text style={[styles.heroMetaText, { color: theme.colors.text }]}>{theme.assets.wordmark}</Text>
+                </View>
+                <View style={[styles.heroMetaPill, { backgroundColor: theme.colors.panelAlt }]}>
+                  <Text style={[styles.heroMetaText, { color: theme.colors.textMuted }]}>{theme.assets.stickerLabel}</Text>
+                </View>
+              </View>
             </View>
 
             <Pressable
@@ -498,6 +506,23 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     fontWeight: "600",
     maxWidth: 300,
+  },
+  heroMetaRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    paddingTop: 8,
+  },
+  heroMetaPill: {
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+  },
+  heroMetaText: {
+    fontSize: 11,
+    fontWeight: "900",
+    textTransform: "uppercase",
+    letterSpacing: 0.7,
   },
   settingsButton: {
     borderWidth: 2,

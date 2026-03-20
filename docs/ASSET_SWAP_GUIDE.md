@@ -21,6 +21,11 @@ Replace colors and gradients in:
 
 Future overlays, stickers, and sound packs should be introduced behind a theme adapter layer. Add references under `assets/` and read them from theme-specific config instead of importing directly inside screens.
 
+Current theme asset slot definitions live in:
+
+- [`src/theme/assets.ts`](/Users/trijbs/KAAR/src/theme/assets.ts)
+- [`src/theme/themes.ts`](/Users/trijbs/KAAR/src/theme/themes.ts)
+
 ### Audio
 
 Add original or licensed sounds through a future `src/features/audio/` module. Keep sound playback driven by settings and reveal state, not hardwired into UI components.
