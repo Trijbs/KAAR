@@ -6,7 +6,9 @@
     "scheme": "kaar",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
+    "icon": "./assets/generated/icon.png",
     "splash": {
+      "image": "./assets/generated/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#11131d"
     },
@@ -20,6 +22,7 @@
     "android": {
       "package": "com.trijbs.kaar",
       "adaptiveIcon": {
+        "foregroundImage": "./assets/generated/adaptive-icon.png",
         "backgroundColor": "#11131d"
       }
     },

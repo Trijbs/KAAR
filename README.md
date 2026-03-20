@@ -50,6 +50,7 @@ Implemented in this pass:
 - EAS build scaffold and mobile package identifiers
 - Original local sound pack wired through Expo audio
 - Proper best-of series summary and reset flow
+- Original placeholder icon, adaptive icon, and splash assets
 - Offline-first behavior with no runtime network dependency
 
 Planned next:
