@@ -12,14 +12,18 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@expo/metro-runtime": "~5.0.5",
     "@react-native-async-storage/async-storage": "^3.0.1",
     "expo": "~53.0.9",
+    "expo-asset": "~11.1.7",
     "expo-av": "~15.1.7",
     "expo-haptics": "~14.1.4",
     "expo-linear-gradient": "~14.1.5",
     "expo-status-bar": "~2.2.3",
     "react": "19.0.0",
-    "react-native": "0.79.2"
+    "react-dom": "19.0.0",
+    "react-native": "0.79.2",
+    "react-native-web": "^0.20.0"
   },
   "devDependencies": {
     "@types/react": "~19.0.10",
