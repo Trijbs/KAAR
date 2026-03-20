@@ -11,7 +11,7 @@ export const prototypeAssets: ThemeAssetSet = {
   stickerLabel: "Original Energy Pack",
   hypeLabel: "Party Lab Visuals",
   overlaySlot: "prototype-overlay-slot",
-  soundPackSlot: "prototype-sound-slot",
+  soundPackSlot: "prototype-sound-pack",
 };
 
 export const collabAssets: ThemeAssetSet = {

@@ -48,6 +48,7 @@ Implemented in this pass:
 - Reduced-motion aware animation behavior
 - Theme asset slot layer for future licensed overlays and sound packs
 - EAS build scaffold and mobile package identifiers
+- Original local sound pack wired through Expo audio
 - Offline-first behavior with no runtime network dependency
 
 Planned next:

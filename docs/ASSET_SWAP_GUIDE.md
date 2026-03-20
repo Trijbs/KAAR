@@ -28,7 +28,17 @@ Current theme asset slot definitions live in:
 
 ### Audio
 
-Add original or licensed sounds through a future `src/features/audio/` module. Keep sound playback driven by settings and reveal state, not hardwired into UI components.
+Sound playback now routes through:
+
+- [`src/features/audio/soundFx.ts`](/Users/trijbs/KAAR/src/features/audio/soundFx.ts)
+
+The bundled prototype pack uses original generated `.wav` files in:
+
+- [`assets/sounds/lock-in.wav`](/Users/trijbs/KAAR/assets/sounds/lock-in.wav)
+- [`assets/sounds/reveal-rise.wav`](/Users/trijbs/KAAR/assets/sounds/reveal-rise.wav)
+- [`assets/sounds/win-blast.wav`](/Users/trijbs/KAAR/assets/sounds/win-blast.wav)
+
+Swap these through the theme asset layer and keep playback triggered by settings plus reveal state, not hardwired into ad hoc components.
 
 ### Typography
 

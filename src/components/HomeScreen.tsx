@@ -15,6 +15,7 @@ import { NicknameModal } from "@/components/NicknameModal";
 import { usePrototypeSettings } from "@/features/settings/usePrototypeSettings";
 import { buildHistoryItem, resolveGame } from "@/features/game/selection";
 import { useTouchArena } from "@/features/arena/useTouchArena";
+import { playSoundEffect } from "@/features/audio/soundFx";
 import type { ChaosConfig, ChaosStrategy, GameMode, GameResult, Player, ScoreboardEntry, SessionHistoryItem } from "@/types/game";
 import { loadHistory, saveHistory } from "@/lib/storage";
 import { awardPoints, buildInitialScoreboard, findSeriesLeader } from "@/lib/rounds";
@@ -129,12 +130,14 @@ export function HomeScreen() {
     setResult(null);
     setDare(null);
     reveal.setValue(0);
+    await playSoundEffect("lockIn", settings.soundEnabled);
     await triggerHaptic();
   };
 
   const handleReveal = async () => {
     try {
       setIsRevealing(true);
+      await playSoundEffect("revealRise", settings.soundEnabled);
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       await new Promise((resolve) => setTimeout(resolve, 850));
       const nextResult = resolveGame(mode, arena.lockedPlayers, chaosConfig);
@@ -146,6 +149,7 @@ export function HomeScreen() {
           : null,
       );
       setScoreboard((current) => awardPoints(current, nextResult.highlightedIds, nextResult.mode));
+      await playSoundEffect("winBlast", settings.soundEnabled);
       await triggerHaptic();
       Animated.spring(reveal, {
         toValue: 1,
@@ -226,11 +230,14 @@ export function HomeScreen() {
                 <View style={[styles.heroMetaPill, { backgroundColor: theme.colors.panelAlt }]}>
                   <Text style={[styles.heroMetaText, { color: theme.colors.text }]}>{theme.assets.wordmark}</Text>
                 </View>
-                <View style={[styles.heroMetaPill, { backgroundColor: theme.colors.panelAlt }]}>
-                  <Text style={[styles.heroMetaText, { color: theme.colors.textMuted }]}>{theme.assets.stickerLabel}</Text>
-                </View>
+              <View style={[styles.heroMetaPill, { backgroundColor: theme.colors.panelAlt }]}>
+                <Text style={[styles.heroMetaText, { color: theme.colors.textMuted }]}>{theme.assets.stickerLabel}</Text>
+              </View>
+              <View style={[styles.heroMetaPill, { backgroundColor: theme.colors.panelAlt }]}>
+                <Text style={[styles.heroMetaText, { color: theme.colors.textMuted }]}>{theme.assets.soundPackSlot}</Text>
               </View>
             </View>
+          </View>
 
             <Pressable
               onPress={() => setSettingsVisible(true)}
